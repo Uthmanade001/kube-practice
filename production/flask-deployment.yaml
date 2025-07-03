@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: flask-deployment
+  namespace: production
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: flask
+  template:
+    metadata:
+      labels:
+        app: flask
+    spec:
+      containers:
+      - name: flask
+        image: uthman1/flask-demo:v2
+        ports:
+        - containerPort: 5000
+        env:
+        - name: APP_ENV
+          valueFrom:
+            configMapKeyRef:
+              name: flask-config
+              key: APP_ENV
+        - name: APP_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: flask-secret
+              key: APP_SECRET
+        resources:
+          requests:
+            cpu: "100m"
+          limits:
+            cpu: "200m"
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 5000
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /readyz
+            port: 5000
+          initialDelaySeconds: 5
+          periodSeconds: 5
